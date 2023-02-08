@@ -6,6 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const app = (0, express_1.default)();
 const port = 3000;
+//подключаем josn парсер, нужен чтобы преобразовывать body, без него посты работать не будут
+// !!!!Важно, после установки этого middleware в postman content-type : application/json
+const jsonBodyMiddleware = express_1.default.json();
+app.use(jsonBodyMiddleware);
 const db = {
     letters: [
         { id: 1, name: 'A', voice: 'voice-A', words: 'words-A' },
@@ -33,8 +37,16 @@ app.get('/letters/:id', (req, res) => {
     }
     res.json(foundLetter);
 });
-app.post('/samurais', (req, res) => {
-    res.send('we create samurai');
+app.post('/letters', (req, res) => {
+    console.log('req', req);
+    const createdLetter = {
+        id: +(new Date()),
+        name: req.body.name,
+        voice: req.body.voice,
+        words: req.body.words,
+    };
+    db.letters.push(createdLetter);
+    res.json(createdLetter);
 });
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
