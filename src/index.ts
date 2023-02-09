@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { Request, Response } from 'express'
 
 const app = express()
 const port = 3000
@@ -16,7 +16,14 @@ export const HTTP_STATUSES = {
 const jsonBodyMiddleware = express.json()
 app.use(jsonBodyMiddleware)
 
-const db = {
+type CourseType = {
+  id: number
+  voice: string
+  name: string
+  words: string
+}
+
+const db: {letters: CourseType[]}  = {
   letters :[
     {id: 1, name: 'A', voice: 'voice-A', words: 'words-A'},
     {id: 2, name: 'B', voice: 'voice-B', words: 'words-B'},
@@ -24,8 +31,11 @@ const db = {
     {id: 4, name: 'D', voice: 'voice-D', words: 'words-D'},
     {id: 5, name: 'E', voice: 'voice-E', words: 'words-E'},
 ]}
+
+//примечание в типе Request, первый {uri параметры}, второй {response}, третий {request.body}, четвертый {query params}
+
 //получаем все либо фильтруем по query параметрам
-app.get('/letters', (req, res) => {
+app.get('/letters', (req: Request<{},{},{},{name: string}>, res: Response<CourseType[]>) => {
   let foundLetters = db.letters
   if (req.query.name) {
     // для фильтрации с ui предусматриваем query параметр. indexOf возвращает индекс совпадения строки, если нет то -1
@@ -35,7 +45,7 @@ app.get('/letters', (req, res) => {
   res.json(foundLetters)
 })
 //получаем по id из uri параметров
-app.get('/letters/:id', (req, res) => {
+app.get('/letters/:id', (req: Request<{ id: string }>, res: Response<CourseType>) => {                  //id: string, потому что query param 
     const foundLetter = db.letters.find(item => item.id === +req.params.id)
 
     if (!foundLetter){

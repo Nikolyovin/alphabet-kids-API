@@ -27,6 +27,7 @@ const db = {
         { id: 5, name: 'E', voice: 'voice-E', words: 'words-E' },
     ]
 };
+//примечание в типе Request, первый {uri параметры}, второй {response}, третий {request.body}, четвертый {query params}
 //получаем все либо фильтруем по query параметрам
 app.get('/letters', (req, res) => {
     let foundLetters = db.letters;
