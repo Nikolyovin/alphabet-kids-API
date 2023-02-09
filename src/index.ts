@@ -3,6 +3,14 @@ import express from 'express'
 const app = express()
 const port = 3000
 
+export const HTTP_STATUSES = {
+  OK_200: 200,
+  CREATED_201: 201,
+  NO_CONTENT_204: 204,
+  BAD_REQUEST_400: 400,
+  NOT_FOUND_404: 404
+}
+
 //подключаем josn парсер, нужен чтобы преобразовывать body, без него посты работать не будут
 // !!!!Важно, после установки этого middleware в postman content-type : application/json
 const jsonBodyMiddleware = express.json()
@@ -31,27 +39,58 @@ app.get('/letters/:id', (req, res) => {
     const foundLetter = db.letters.find(item => item.id === +req.params.id)
 
     if (!foundLetter){
-      res.sendStatus(404)
+      res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
       return
     }
 
     res.json(foundLetter)
-  })
+})
 
-  app.post('/letters', (req, res) => {
-    console.log('req', req);
+ app.post('/letters', (req, res) => {
     
-    const createdLetter = {
-      id: +(new Date()),
-      name: req.body.name,
-      voice: req.body.voice,
-      words: req.body.words,
-    }
+  if (!req.body.name || !req.body.voice || !req.body.words) {
+      res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400)
+      return
+  }
+    
+  const createdLetter = {
+    id: +(new Date()),
+    name: req.body.name,
+    voice: req.body.voice,
+    words: req.body.words,
+  }
 
-    db.letters.push(createdLetter)
+  db.letters.push(createdLetter)
 
-    res.json(createdLetter)
-  })
+  res.status(HTTP_STATUSES.CREATED_201).json(createdLetter)
+})
+
+app.delete('/letters/:id', (req, res) => {
+  db.letters = db.letters.filter(item => item.id !== +req.params.id)
+
+  res.sendStatus(HTTP_STATUSES.NO_CONTENT_204)
+})
+
+app.put('/letters/:id', (req, res) => {
+  // if (!req.body.name || !req.body.voice || !req.body.words) {
+  //   res.sendStatus(400)
+  //   return
+  // }
+
+  const foundLetter = db.letters.find(item => item.id === +req.params.id)
+
+  if (!foundLetter){
+    res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
+    return
+  }
+
+  if (req.body.name) foundLetter.name = req.body.name
+  if (req.body.voice) foundLetter.voice = req.body.voice
+  if (req.body.words) foundLetter.words = req.body.words
+
+  res.json(foundLetter)
+})
+
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
