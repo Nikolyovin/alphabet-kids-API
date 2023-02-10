@@ -1,4 +1,7 @@
 import express, { Request, Response } from 'express'
+import { LetterCreateModel } from './models/CreateLetterModel'
+import { QueryLetterModel } from './models/QueryLetterModel'
+import { RequestWithBody, RequestWithParams, RequestWithParamsAndBody, RequestWithQuery } from './types'
 
 const app = express()
 const port = 3000
@@ -35,7 +38,7 @@ const db: {letters: CourseType[]}  = {
 //примечание в типе Request, первый {uri параметры}, второй {response}, третий {request.body}, четвертый {query params}
 
 //получаем все либо фильтруем по query параметрам
-app.get('/letters', (req: Request<{},{},{},{name: string}>, res: Response<CourseType[]>) => {
+app.get('/letters', (req: RequestWithQuery<QueryLetterModel>, res: Response<CourseType[]>) => {
   let foundLetters = db.letters
   if (req.query.name) {
     // для фильтрации с ui предусматриваем query параметр. indexOf возвращает индекс совпадения строки, если нет то -1
@@ -45,7 +48,7 @@ app.get('/letters', (req: Request<{},{},{},{name: string}>, res: Response<Course
   res.json(foundLetters)
 })
 //получаем по id из uri параметров
-app.get('/letters/:id', (req: Request<{ id: string }>, res: Response<CourseType>) => {                  //id: string, потому что query param 
+app.get('/letters/:id', (req: RequestWithParams<{ id: string }>, res: Response<CourseType>) => {                  //id: string, потому что query param 
     const foundLetter = db.letters.find(item => item.id === +req.params.id)
 
     if (!foundLetter){
@@ -56,12 +59,12 @@ app.get('/letters/:id', (req: Request<{ id: string }>, res: Response<CourseType>
     res.json(foundLetter)
 })
 
- app.post('/letters', (req, res) => {
+app.post('/letters', (req: RequestWithBody<LetterCreateModel>, res: Response<CourseType>) => {
     
   if (!req.body.name || !req.body.voice || !req.body.words) {
       res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400)
       return
-  }
+}
     
   const createdLetter = {
     id: +(new Date()),
@@ -75,13 +78,13 @@ app.get('/letters/:id', (req: Request<{ id: string }>, res: Response<CourseType>
   res.status(HTTP_STATUSES.CREATED_201).json(createdLetter)
 })
 
-app.delete('/letters/:id', (req, res) => {
+app.delete('/letters/:id', (req: RequestWithParams<{id: string}>, res) => {
   db.letters = db.letters.filter(item => item.id !== +req.params.id)
 
   res.sendStatus(HTTP_STATUSES.NO_CONTENT_204)
 })
 
-app.put('/letters/:id', (req, res) => {
+app.put('/letters/:id', (req: RequestWithParamsAndBody<{id: string}, LetterCreateModel>, res: Response<CourseType>) => {
   // if (!req.body.name || !req.body.voice || !req.body.words) {
   //   res.sendStatus(400)
   //   return
