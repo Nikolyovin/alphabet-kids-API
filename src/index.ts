@@ -1,6 +1,9 @@
 import express, { Request, Response } from 'express'
 import { LetterCreateModel } from './models/CreateLetterModel'
+import { LetterViewModel } from './models/LetterViewModel'
 import { QueryLetterModel } from './models/QueryLetterModel'
+import { LetterUpdateModel } from './models/UpdateLetterModel'
+import { URIParamsLetterIdModel } from './models/URIParamsLetterIdModel'
 import { RequestWithBody, RequestWithParams, RequestWithParamsAndBody, RequestWithQuery } from './types'
 
 const app = express()
@@ -19,14 +22,14 @@ export const HTTP_STATUSES = {
 const jsonBodyMiddleware = express.json()
 app.use(jsonBodyMiddleware)
 
-type CourseType = {
+type LetterType = {
   id: number
   voice: string
   name: string
   words: string
 }
 
-const db: {letters: CourseType[]}  = {
+const db: {letters: LetterType[]}  = {
   letters :[
     {id: 1, name: 'A', voice: 'voice-A', words: 'words-A'},
     {id: 2, name: 'B', voice: 'voice-B', words: 'words-B'},
@@ -38,7 +41,7 @@ const db: {letters: CourseType[]}  = {
 //примечание в типе Request, первый {uri параметры}, второй {response}, третий {request.body}, четвертый {query params}
 
 //получаем все либо фильтруем по query параметрам
-app.get('/letters', (req: RequestWithQuery<QueryLetterModel>, res: Response<CourseType[]>) => {
+app.get('/letters', (req: RequestWithQuery<QueryLetterModel>, res: Response<LetterViewModel[]>) => {
   let foundLetters = db.letters
   if (req.query.name) {
     // для фильтрации с ui предусматриваем query параметр. indexOf возвращает индекс совпадения строки, если нет то -1
@@ -48,7 +51,7 @@ app.get('/letters', (req: RequestWithQuery<QueryLetterModel>, res: Response<Cour
   res.json(foundLetters)
 })
 //получаем по id из uri параметров
-app.get('/letters/:id', (req: RequestWithParams<{ id: string }>, res: Response<CourseType>) => {                  //id: string, потому что query param 
+app.get('/letters/:id', (req: RequestWithParams<URIParamsLetterIdModel>, res: Response<LetterViewModel>) => {                  //id: string, потому что query param 
     const foundLetter = db.letters.find(item => item.id === +req.params.id)
 
     if (!foundLetter){
@@ -59,7 +62,7 @@ app.get('/letters/:id', (req: RequestWithParams<{ id: string }>, res: Response<C
     res.json(foundLetter)
 })
 
-app.post('/letters', (req: RequestWithBody<LetterCreateModel>, res: Response<CourseType>) => {
+app.post('/letters', (req: RequestWithBody<LetterCreateModel>, res: Response<LetterCreateModel>) => {
     
   if (!req.body.name || !req.body.voice || !req.body.words) {
       res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400)
@@ -78,13 +81,13 @@ app.post('/letters', (req: RequestWithBody<LetterCreateModel>, res: Response<Cou
   res.status(HTTP_STATUSES.CREATED_201).json(createdLetter)
 })
 
-app.delete('/letters/:id', (req: RequestWithParams<{id: string}>, res) => {
+app.delete('/letters/:id', (req: RequestWithParams<URIParamsLetterIdModel>, res) => {
   db.letters = db.letters.filter(item => item.id !== +req.params.id)
 
   res.sendStatus(HTTP_STATUSES.NO_CONTENT_204)
 })
 
-app.put('/letters/:id', (req: RequestWithParamsAndBody<{id: string}, LetterCreateModel>, res: Response<CourseType>) => {
+app.put('/letters/:id', (req: RequestWithParamsAndBody<URIParamsLetterIdModel, LetterCreateModel>, res: Response<LetterUpdateModel>) => {
   // if (!req.body.name || !req.body.voice || !req.body.words) {
   //   res.sendStatus(400)
   //   return
