@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express'
+import mongoose from 'mongoose'
 import { LetterCreateModel } from './models/CreateLetterModel'
 import { LetterViewModel } from './models/LetterViewModel'
 import { QueryLetterModel } from './models/QueryLetterModel'
@@ -7,7 +8,11 @@ import { URIParamsLetterIdModel } from './models/URIParamsLetterIdModel'
 import { RequestWithBody, RequestWithParams, RequestWithParamsAndBody, RequestWithQuery } from './types'
 
 const app = express()
-const port = 3000
+
+const PORT = 3000
+
+const DB_URL = 'mongodb://localhost:27017/alphabet'
+
 
 export const HTTP_STATUSES = {
   OK_200: 200,
@@ -108,6 +113,17 @@ app.put('/letters/:id', (req: RequestWithParamsAndBody<URIParamsLetterIdModel, L
 })
 
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+// app.listen(port, () => {
+//   console.log(`Example app listening on port ${port}`)
+// })
+
+async function startApp(){
+  try{
+      mongoose.connect(DB_URL)
+      app.listen(PORT, () => console.log('SERVER STARTED ON PORT' + PORT))
+  }catch(e){
+      console.log(e);
+  }
+}
+
+startApp()  
