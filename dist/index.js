@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.HTTP_STATUSES = void 0;
 const express_1 = __importDefault(require("express"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const Letter_1 = __importDefault(require("./models/Letter"));
 const app = (0, express_1.default)();
 const PORT = 3000;
 const DB_URL = 'mongodb://localhost:27017/alphabet';
@@ -35,7 +36,7 @@ const db = {
         { id: 2, name: 'B', voice: 'voice-B', words: 'words-B' },
         { id: 3, name: 'C', voice: 'voice-C', words: 'words-C' },
         { id: 4, name: 'D', voice: 'voice-D', words: 'words-D' },
-        { id: 5, name: 'E', voice: 'voice-E', words: 'words-E' },
+        { id: 5, name: 'E', voice: 'voice-E', words: 'words-E' }
     ]
 };
 //примечание в типе Request, первый {uri параметры}, второй {response}, третий {request.body}, четвертый {query params}
@@ -50,6 +51,7 @@ app.get('/letters', (req, res) => {
 });
 //получаем по id из uri параметров
 app.get('/letters/:id', (req, res) => {
+    //id: string, потому что query param
     const foundLetter = db.letters.find(item => item.id === +req.params.id);
     if (!foundLetter) {
         res.sendStatus(exports.HTTP_STATUSES.NOT_FOUND_404);
@@ -57,20 +59,29 @@ app.get('/letters/:id', (req, res) => {
     }
     res.json(foundLetter);
 });
-app.post('/letters', (req, res) => {
-    if (!req.body.name || !req.body.voice || !req.body.words) {
-        res.sendStatus(exports.HTTP_STATUSES.BAD_REQUEST_400);
-        return;
+app.post('/letters', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { name, voice, image, words } = req.body;
+        if (!name || !voice || !words || !image) {
+            console.log('error');
+            res.sendStatus(exports.HTTP_STATUSES.BAD_REQUEST_400);
+            return;
+        }
+        const letter = yield Letter_1.default.create({ name, voice, image, words });
+        res.status(exports.HTTP_STATUSES.CREATED_201).json(letter);
     }
-    const createdLetter = {
-        id: +(new Date()),
-        name: req.body.name,
-        voice: req.body.voice,
-        words: req.body.words,
-    };
-    db.letters.push(createdLetter);
-    res.status(exports.HTTP_STATUSES.CREATED_201).json(createdLetter);
-});
+    catch (e) {
+        console.log(e);
+        res.status(500);
+    }
+    // const createdLetter = {
+    //   id: +(new Date()),
+    //   name: req.body.name,
+    //   voice: req.body.voice,
+    //   words: req.body.words,
+    // }
+    // db.letters.push(createdLetter)
+}));
 app.delete('/letters/:id', (req, res) => {
     db.letters = db.letters.filter(item => item.id !== +req.params.id);
     res.sendStatus(exports.HTTP_STATUSES.NO_CONTENT_204);
